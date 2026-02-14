@@ -39,16 +39,14 @@ JS Walkie Talkie is a real-time **browser walkie‑talkie** built with plain Jav
 
  3.  ```bash
    git clone https://github.com/hamzaalighalib/jswalkietalkie.git
-   cd jswalkietalkie````
+   cd jswalkietalkie```
 
-  4. ```npm install````
+  4. ```npm install```
 
-5. ```
-node server.js ```
+5. ```node server.js ```
 
-6.```
-[node server.js](http://localhost:3000
-)  ```
+6. http://localhost:3000
+
 
 7. Allow microphone permission when the browser asks.
 8. Open the same URL in another tab or another device – now press and hold the talk button and enjoy real‑time voice chat.\
