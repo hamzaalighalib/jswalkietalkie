@@ -37,7 +37,12 @@ JS Walkie Talkie is a real-time **browser walkie‑talkie** built with plain Jav
 1. Make sure you have Node.js and npm installed on your system.
 2. Clone this repository:
 
-3.  ```bash git clone https://github.com/hamzaalighalib/jswalkietalkie.git \n      cd jswalkietalkie```
+3. Clone this repository:
+
+   ```bash
+   git clone https://github.com/hamzaalighalib/jswalkietalkie.git
+   cd jswalkietalkie
+
 
   5. ```npm install```
 
