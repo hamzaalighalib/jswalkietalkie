@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Real-Time Voice Chat</title>
+        <style>
+            .speaking {
+                color: green;
+                font-weight: bold;
+            }
+            .muted {
+                opacity: 0.5;
+            }
+            button {
+                margin-left: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>Real-Time Voice Chat</h2>
+        <button id="talk">Start Talking</button>
+
+        <h3>Users:</h3>
+        <ul id="users"></ul>
+
+        <script>
+            const name = prompt("Enter your name:");
+            const ws = new WebSocket(
+                "wss://2c0f6621-5d34-4d5e-92a5-eb9dd8c18a5f-00-2b3xqjs0rnn0r.kirk.replit.dev/",
+            );
+
+            let isRecording = false;
+            let mutedUsers = [];
+            const usersListEl = document.getElementById("users");
+            const talkBtn = document.getElementById("talk");
+
+            const audioContext = new AudioContext();
+            let inputStream, processorNode;
+
+            // Unlock audio context on first interaction
+            document.body.addEventListener(
+                "click",
+                () => audioContext.resume(),
+                { once: true },
+            );
+
+            // Join
+            ws.onopen = () => ws.send(JSON.stringify({ type: "join", name }));
+
+            // Handle incoming messages
+            ws.onmessage = async (event) => {
+                if (typeof event.data === "string") {
+                    const data = JSON.parse(event.data);
+                    if (data.type === "users") {
+                        // Update user list with mute button
+                        usersListEl.innerHTML = "";
+                        data.users.forEach((u) => {
+                            const li = document.createElement("li");
+                            li.textContent = u.name;
+                            if (u.mutedBy.includes(name))
+                                li.classList.add("muted");
+
+                            if (u.name !== name) {
+                                const btn = document.createElement("button");
+                                btn.textContent = u.mutedBy.includes(name)
+                                    ? "Unmute"
+                                    : "Mute";
+                                btn.onclick = () =>
+                                    ws.send(
+                                        JSON.stringify({
+                                            type: "toggle-mute",
+                                            target: u.name,
+                                        }),
+                                    );
+                                li.appendChild(btn);
+                            }
+
+                            usersListEl.appendChild(li);
+                        });
+                    }
+                    return;
+                }
+
+                // Raw PCM audio received
+                if (!isRecording) {
+                    // do not play own audio
+                    const arrayBuffer = await event.data.arrayBuffer();
+                    const float32Array = new Float32Array(arrayBuffer);
+
+                    const audioBuffer = audioContext.createBuffer(
+                        1,
+                        float32Array.length,
+                        48000,
+                    );
+                    audioBuffer.copyToChannel(float32Array, 0);
+
+                    const source = audioContext.createBufferSource();
+                    source.buffer = audioBuffer;
+                    source.connect(audioContext.destination);
+                    source.start();
+
+                    // Speaking indicator (first user for demo)
+                    const li = usersListEl.querySelector("li");
+                    if (li) {
+                        li.classList.add("speaking");
+                        setTimeout(() => li.classList.remove("speaking"), 300);
+                    }
+                }
+            };
+
+            // Start/stop talking
+            talkBtn.onclick = async () => {
+                if (isRecording) {
+                    processorNode.disconnect();
+                    inputStream.getTracks().forEach((t) => t.stop());
+                    isRecording = false;
+                    talkBtn.textContent = "Start Talking";
+                    return;
+                }
+
+                inputStream = await navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                });
+                processorNode = audioContext.createScriptProcessor(4096, 1, 1);
+
+                const source =
+                    audioContext.createMediaStreamSource(inputStream);
+                source.connect(processorNode);
+                processorNode.connect(audioContext.destination); // we won't actually hear it
+
+                processorNode.onaudioprocess = (e) => {
+                    const data = e.inputBuffer.getChannelData(0);
+                    // Send Float32 PCM as ArrayBuffer
+                    ws.send(data.buffer);
+                };
+
+                isRecording = true;
+                talkBtn.textContent = "Stop Talking";
+            };
+        </script>
+    </body>
+</html>
