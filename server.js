@@ -12,7 +12,7 @@ const wss = new WebSocket.Server({ server });
 // Users: { name, ws, mutedBy: [] }
 let users = [];
 
-// Serve static index.html
+// Serve static index.html and other static files
 app.use(express.static(path.join(__dirname)));
 
 function broadcastJSON(data) {
@@ -34,7 +34,7 @@ function broadcastUsers() {
 wss.on("connection", (ws) => {
     ws.on("message", (msg) => {
         try {
-            const data = JSON.parse(msg);
+            const data = JSON.parse(msg.toString());
 
             // User joins
             if (data.type === "join") {
@@ -62,14 +62,10 @@ wss.on("connection", (ws) => {
                 return;
             }
         } catch (e) {
-            // Raw PCM chunk received
-            // Broadcast to all clients except sender and clients who muted sender
+            // Binary frame (audio or video)
+            // Broadcast to all clients except sender.
             wss.clients.forEach((client) => {
-                if (
-                    client.readyState === WebSocket.OPEN &&
-                    client !== ws &&
-                    !ws.mutedBy?.includes(client.username)
-                ) {
+                if (client.readyState === WebSocket.OPEN && client !== ws) {
                     client.send(msg);
                 }
             });
@@ -83,7 +79,7 @@ wss.on("connection", (ws) => {
     });
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () =>
     console.log(`Server running at http://localhost:${PORT}`),
 );
