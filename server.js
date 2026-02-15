@@ -13,7 +13,12 @@ const wss = new WebSocket.Server({ server });
 let users = [];
 
 // Serve static index.html and other static files
-app.use(express.static(path.join(__dirname)));
+// serve static files from ./public (better than __dirname)
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 function broadcastJSON(data) {
     const msg = JSON.stringify(data);
