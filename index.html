@@ -1,141 +1,871 @@
 <!doctype html>
-<html>
+<html lang="en">
     <head>
-        <title>Real-Time Voice Chat</title>
+        <meta charset="utf-8" />
+        <title>
+            Zoom Clone and group calling system by Hamza Ali Ghalib (Ghalib
+            Corporation)
+        </title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta
+            name="description"
+            content="Zoom Clone and group calling system by Hamza Ali Ghalib (Ghalib Corporation)"
+        />
+        <meta name="author" content="Hamza Ali Ghalib" />
+        <meta
+            name="keywords"
+            content="Zoom Clone, group calling system, Hamza Ali Ghalib, Ghalib Corporation"
+        />
+        <meta name="robots" content="index, follow" />
+        <meta name="googlebot" content="index, follow" />
+        <meta name="google" content="notranslate" />
+        <meta name="theme-color" content="#0f172a" />
+        <meta name="msapplication-TileColor" content="#0f172a" />
+        <meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
+
+        <!-- Favicon -->
+        <link rel="icon" href="image.png" />
+        <link rel="apple-touch-icon" href="image.png" />
+        <link rel="manifest" href="/manifest.json" />
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website" />
+        <meta
+            property="og:url"
+            content="https://2c0f6621-5d34-4d5e-92a5-eb9dd8c18a5f-00-2b3xqjs0rnn0r.kirk.replit.dev/"
+        />
+        <meta
+            property="og:title"
+            content="Zoom Clone and group calling system by Hamza Ali Ghalib (Ghalib Corporation)"
+        />
+        <meta
+            property="og:description"
+            content="Zoom Clone and group calling system by Hamza Ali Ghalib (Ghalib Corporation)"
+        />
+        <meta property="og:image" content="image.png" />
+
+        <!-- Tailwind CDN -->
+        <script src="https://cdn.tailwindcss.com"></script>
+
         <style>
-            .speaking {
-                color: green;
-                font-weight: bold;
+            .signal {
+                width: 40px;
+                height: 8px;
+                background: #e5e7eb;
+                position: relative;
+                border-radius: 9999px;
+                overflow: hidden;
             }
-            .muted {
-                opacity: 0.5;
+            .signal-fill {
+                height: 100%;
+                width: 0%;
+                background: #22c55e;
+                transition: width 0.08s linear;
             }
-            button {
-                margin-left: 10px;
+
+            .fade {
+                transition: opacity 0.25s ease;
+            }
+            .fade-hidden {
+                opacity: 0;
+            }
+            .fade-visible {
+                opacity: 1;
+            }
+
+            .user-off-card {
+                color: #e5e7eb;
+                background-size: 200% 200%;
+                background-position: top left;
+            }
+            .user-off-style1 {
+                background-image: radial-gradient(
+                    circle at top left,
+                    #22c55e,
+                    #0f172a 40%,
+                    #020617
+                );
+            }
+            .user-off-style2 {
+                background-image: linear-gradient(
+                    to bottom,
+                    #0f172a,
+                    #1e293b,
+                    #22c55e
+                );
+            }
+            .user-off-style3 {
+                background-image: radial-gradient(
+                    circle at center,
+                    #6366f1,
+                    #0f172a 60%,
+                    #020617
+                );
+            }
+
+            .slide-fade-enter {
+                opacity: 0;
+                transform: translate(-10%, -10%);
+            }
+            .slide-fade-active {
+                opacity: 1;
+                transform: translate(0, 0);
+                transition:
+                    opacity 0.25s ease,
+                    transform 0.25s ease;
+            }
+
+            .slide-vertical-enter {
+                opacity: 0;
+                transform: translateY(-15%);
+            }
+            .slide-vertical-active {
+                opacity: 1;
+                transform: translateY(0);
+                transition:
+                    opacity 0.25s ease,
+                    transform 0.25s ease;
             }
         </style>
     </head>
-    <body>
-        <h2>Real-Time Voice Chat</h2>
-        <button id="talk">Start Talking</button>
+    <body class="bg-slate-900 text-slate-100 min-h-screen">
+        <div class="max-w-6xl mx-auto px-4 py-6">
+            <header
+                class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
+            >
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
+                        Group Voice & Snapshot Video Chat
+                    </h1>
+                    <p class="text-slate-400 text-sm sm:text-base">
+                        Audio is real-time, video is live snapshots from camera
+                        or screen.
+                    </p>
+                </div>
+                <div class="flex flex-col gap-2 items-end">
+                    <div class="flex flex-wrap gap-3">
+                        <button
+                            id="talk"
+                            class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-sm sm:text-base font-medium shadow"
+                        >
+                            Start Mic
+                        </button>
+                        <button
+                            id="cameraBtn"
+                            class="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-sm sm:text-base font-medium shadow"
+                        >
+                            Camera On
+                        </button>
+                        <button
+                            id="screenBtn"
+                            class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm sm:text-base font-medium shadow"
+                        >
+                            Share Screen
+                        </button>
+                    </div>
 
-        <h3>Users:</h3>
-        <ul id="users"></ul>
+                    <div
+                        class="flex flex-wrap gap-2 items-center mt-1 justify-end"
+                    >
+                        <label class="text-[11px] text-slate-400"
+                            >Off transition:</label
+                        >
+                        <select
+                            id="offStyleSelect"
+                            class="text-xs bg-slate-800 border border-slate-600 rounded px-2 py-1"
+                        >
+                            <option value="style1">Slide TL → center</option>
+                            <option value="style2">Slide top → bottom</option>
+                            <option value="style3">Fade only</option>
+                        </select>
+
+                        <label class="text-[11px] text-slate-400 ml-1">
+                            Custom card image:
+                            <input
+                                id="offImageInput"
+                                type="file"
+                                accept="image/*"
+                                class="text-[11px]"
+                            />
+                        </label>
+                    </div>
+                </div>
+            </header>
+
+            <main class="grid gap-6 lg:grid-cols-3">
+                <!-- Local + remote video thumbnails -->
+                <section class="lg:col-span-2 flex flex-col gap-4">
+                    <div
+                        class="bg-slate-800/70 border border-slate-700 rounded-xl p-3 sm:p-4"
+                    >
+                        <h2 class="text-sm font-semibold text-slate-300 mb-2">
+                            Your Preview
+                        </h2>
+                        <div
+                            class="aspect-video w-full bg-black/80 rounded-lg overflow-hidden flex items-center justify-center relative"
+                        >
+                            <video
+                                id="localVideo"
+                                autoplay
+                                playsinline
+                                muted
+                                class="w-full h-full object-cover fade fade-hidden"
+                            ></video>
+                            <div
+                                id="localOffCard"
+                                class="absolute inset-0 flex flex-col items-center justify-center text-xs sm:text-sm user-off-card user-off-style1 slide-fade-active rounded-lg"
+                            >
+                                <div
+                                    class="text-base sm:text-lg font-semibold mb-1"
+                                >
+                                    @you camera off
+                                </div>
+                                <div class="text-[11px] text-slate-300">
+                                    Turn on camera or share screen to start
+                                    streaming.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-slate-800/70 border border-slate-700 rounded-xl p-3 sm:p-4"
+                    >
+                        <h2 class="text-sm font-semibold text-slate-300 mb-2">
+                            Remote Views
+                        </h2>
+                        <div
+                            id="remoteVideos"
+                            class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"
+                        ></div>
+                    </div>
+                </section>
+
+                <!-- Users + levels + mute self -->
+                <aside
+                    class="bg-slate-800/70 border border-slate-700 rounded-xl p-3 sm:p-4 flex flex-col"
+                >
+                    <h2 class="text-sm font-semibold text-slate-300 mb-3">
+                        Users in Room
+                    </h2>
+                    <ul id="users" class="space-y-2 text-sm"></ul>
+
+                    <div class="mt-4 flex items-center justify-between gap-3">
+                        <span class="text-xs text-slate-400"> Your mic: </span>
+                        <button
+                            id="muteSelfBtn"
+                            class="px-3 py-1 rounded bg-slate-700 hover:bg-slate-600 text-xs"
+                        >
+                            Mute Me
+                        </button>
+                    </div>
+
+                    <p
+                        class="mt-auto pt-3 text-[11px] text-slate-500 border-t border-slate-700/60"
+                    >
+                        Tip: Join anytime; audio is real-time and snapshots
+                        update live, with a short 10s frame buffer.
+                    </p>
+                </aside>
+            </main>
+        </div>
 
         <script>
-            const name = prompt("Enter your name:");
+            // ===== BASIC SETUP =====
+            const name =
+                prompt("Enter your name:") ||
+                "Guest-" + Math.floor(Math.random() * 9999);
+
             const ws = new WebSocket(
                 "wss://2c0f6621-5d34-4d5e-92a5-eb9dd8c18a5f-00-2b3xqjs0rnn0r.kirk.replit.dev/",
             );
 
-            let isRecording = false;
-            let mutedUsers = [];
             const usersListEl = document.getElementById("users");
             const talkBtn = document.getElementById("talk");
+            const cameraBtn = document.getElementById("cameraBtn");
+            const screenBtn = document.getElementById("screenBtn");
+            const muteSelfBtn = document.getElementById("muteSelfBtn");
+            const remoteVideosEl = document.getElementById("remoteVideos");
+            const localVideo = document.getElementById("localVideo");
+            const localOffCard = document.getElementById("localOffCard");
+            const offStyleSelect = document.getElementById("offStyleSelect");
+            const offImageInput = document.getElementById("offImageInput");
 
-            const audioContext = new AudioContext();
+            const audioContext = new (window.AudioContext ||
+                window.webkitAudioContext)();
+
+            let isRecordingAudio = false;
+            let isSendingVideo = false;
+            let currentVideoSource = "none"; // "camera" | "screen" | "none"
+            let selfMuted = false;
+
             let inputStream, processorNode;
+            let cameraStream;
+            let snapshotIntervalId = null;
 
-            // Unlock audio context on first interaction
+            const snapshotIntervalMs = 400; // adjust for quality vs bandwidth
+
+            // senderName -> { imgEl, lastUrl, offCard, lastSeen, history: [] }
+            const videoPeers = new Map();
+
+            let offCardStyle = "style1"; // "style1" | "style2" | "style3"
+            let offCardImageUrl = null; // custom image URL
+
+            // Unlock AudioContext
             document.body.addEventListener(
                 "click",
                 () => audioContext.resume(),
                 { once: true },
             );
 
-            // Join
-            ws.onopen = () => ws.send(JSON.stringify({ type: "join", name }));
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ type: "join", name }));
+            };
 
-            // Handle incoming messages
+            // ===== OFF-CARD STYLE HANDLING =====
+            function applyLocalOffCardStyle() {
+                localOffCard.style.backgroundImage = "";
+                localOffCard.classList.remove(
+                    "user-off-style1",
+                    "user-off-style2",
+                    "user-off-style3",
+                    "slide-fade-enter",
+                    "slide-fade-active",
+                    "slide-vertical-enter",
+                    "slide-vertical-active",
+                    "fade-visible",
+                );
+                localOffCard.classList.add("user-off-card");
+
+                if (offCardImageUrl) {
+                    localOffCard.style.backgroundImage = `url(${offCardImageUrl})`;
+                    localOffCard.style.backgroundSize = "cover";
+                    localOffCard.style.backgroundPosition = "center";
+                    // fade-in custom bg
+                    localOffCard.classList.add("fade-visible");
+                } else {
+                    if (offCardStyle === "style1") {
+                        localOffCard.classList.add(
+                            "user-off-style1",
+                            "slide-fade-active",
+                        );
+                    } else if (offCardStyle === "style2") {
+                        localOffCard.classList.add(
+                            "user-off-style2",
+                            "slide-vertical-active",
+                        );
+                    } else {
+                        localOffCard.classList.add(
+                            "user-off-style3",
+                            "fade-visible",
+                        );
+                    }
+                }
+            }
+
+            offStyleSelect.onchange = () => {
+                offCardStyle = offStyleSelect.value;
+                if (currentVideoSource === "none") applyLocalOffCardStyle();
+            };
+
+            offImageInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    if (offCardImageUrl) {
+                        URL.revokeObjectURL(offCardImageUrl);
+                        offCardImageUrl = null;
+                    }
+                    if (currentVideoSource === "none") applyLocalOffCardStyle();
+                    return;
+                }
+                const url = URL.createObjectURL(file);
+                if (offCardImageUrl) URL.revokeObjectURL(offCardImageUrl);
+                offCardImageUrl = url;
+                if (currentVideoSource === "none") applyLocalOffCardStyle();
+            };
+
+            applyLocalOffCardStyle();
+
+            // ===== RECEIVE DATA =====
             ws.onmessage = async (event) => {
                 if (typeof event.data === "string") {
                     const data = JSON.parse(event.data);
                     if (data.type === "users") {
-                        // Update user list with mute button
-                        usersListEl.innerHTML = "";
-                        data.users.forEach((u) => {
-                            const li = document.createElement("li");
-                            li.textContent = u.name;
-                            if (u.mutedBy.includes(name))
-                                li.classList.add("muted");
-
-                            if (u.name !== name) {
-                                const btn = document.createElement("button");
-                                btn.textContent = u.mutedBy.includes(name)
-                                    ? "Unmute"
-                                    : "Mute";
-                                btn.onclick = () =>
-                                    ws.send(
-                                        JSON.stringify({
-                                            type: "toggle-mute",
-                                            target: u.name,
-                                        }),
-                                    );
-                                li.appendChild(btn);
-                            }
-
-                            usersListEl.appendChild(li);
-                        });
+                        renderUsersList(data.users);
                     }
                     return;
                 }
 
-                // Raw PCM audio received
-                if (!isRecording) {
-                    // do not play own audio
-                    const arrayBuffer = await event.data.arrayBuffer();
-                    const float32Array = new Float32Array(arrayBuffer);
+                const buf = await event.data.arrayBuffer();
+                const all = new Uint8Array(buf);
+
+                const kind = all[0]; // 0=audio, 1=videoJPEG
+                const nameLen = all[1];
+                const nameBytes = all.slice(2, 2 + nameLen);
+                const payload = all.slice(2 + nameLen).buffer;
+
+                const senderName = new TextDecoder().decode(nameBytes);
+                if (senderName === name) return;
+
+                if (kind === 0) {
+                    // AUDIO
+                    const int16 = new Int16Array(payload);
+                    const float32 = new Float32Array(int16.length);
+                    const norm = 1 / 32768;
+                    let sum = 0;
+                    for (let i = 0; i < int16.length; i++) {
+                        const v = int16[i] * norm;
+                        float32[i] = v;
+                        sum += v * v;
+                    }
+                    const rms = Math.sqrt(sum / int16.length) || 0;
+                    const level = Math.min(1, rms * 8);
+                    updateSignal(senderName, level);
 
                     const audioBuffer = audioContext.createBuffer(
                         1,
-                        float32Array.length,
+                        float32.length,
                         48000,
                     );
-                    audioBuffer.copyToChannel(float32Array, 0);
+                    audioBuffer.copyToChannel(float32, 0);
 
                     const source = audioContext.createBufferSource();
                     source.buffer = audioBuffer;
                     source.connect(audioContext.destination);
                     source.start();
-
-                    // Speaking indicator (first user for demo)
-                    const li = usersListEl.querySelector("li");
-                    if (li) {
-                        li.classList.add("speaking");
-                        setTimeout(() => li.classList.remove("speaking"), 300);
-                    }
+                } else if (kind === 1) {
+                    // VIDEO SNAPSHOT
+                    handleIncomingSnapshot(senderName, new Uint8Array(payload));
                 }
             };
 
-            // Start/stop talking
+            // ===== USERS LIST & SIGNAL =====
+            function renderUsersList(users) {
+                usersListEl.innerHTML = "";
+                users.forEach((u) => {
+                    const li = document.createElement("li");
+                    li.className =
+                        "flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg bg-slate-900/60 border border-slate-700/60";
+                    li.dataset.username = u.name;
+
+                    const left = document.createElement("div");
+                    left.className = "flex items-center gap-2";
+
+                    const signal = document.createElement("div");
+                    signal.className = "signal";
+                    const fill = document.createElement("div");
+                    fill.className = "signal-fill";
+                    signal.appendChild(fill);
+
+                    const nameSpan = document.createElement("span");
+                    nameSpan.textContent = u.name;
+                    nameSpan.className = "font-medium";
+
+                    left.appendChild(signal);
+                    left.appendChild(nameSpan);
+                    li.appendChild(left);
+
+                    if (u.name !== name) {
+                        const btn = document.createElement("button");
+                        btn.textContent = u.mutedBy.includes(name)
+                            ? "Unmute"
+                            : "Mute";
+                        btn.className =
+                            "text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600";
+                        btn.onclick = () =>
+                            ws.send(
+                                JSON.stringify({
+                                    type: "toggle-mute",
+                                    target: u.name,
+                                }),
+                            );
+                        li.appendChild(btn);
+                    }
+
+                    if (u.mutedBy.includes(name))
+                        li.classList.add("opacity-50");
+
+                    usersListEl.appendChild(li);
+                });
+            }
+
+            function updateSignal(username, level) {
+                const li = Array.from(usersListEl.children).find(
+                    (li) => li.dataset.username === username,
+                );
+                if (!li) return;
+                const fill = li.querySelector(".signal-fill");
+                if (!fill) return;
+                const percent = Math.round(level * 100);
+                fill.style.width = percent === 0 ? "0%" : percent + "%";
+            }
+
+            // ===== MUTE SELF AUDIO =====
+            muteSelfBtn.onclick = () => {
+                selfMuted = !selfMuted;
+                muteSelfBtn.textContent = selfMuted ? "Unmute Me" : "Mute Me";
+                muteSelfBtn.classList.toggle("bg-red-600", selfMuted);
+                muteSelfBtn.classList.toggle("hover:bg-red-500", selfMuted);
+                muteSelfBtn.classList.toggle("bg-slate-700", !selfMuted);
+                muteSelfBtn.classList.toggle("hover:bg-slate-600", !selfMuted);
+            };
+
+            // ===== AUDIO SEND =====
             talkBtn.onclick = async () => {
-                if (isRecording) {
+                if (isRecordingAudio) {
                     processorNode.disconnect();
                     inputStream.getTracks().forEach((t) => t.stop());
-                    isRecording = false;
-                    talkBtn.textContent = "Start Talking";
+                    isRecordingAudio = false;
+                    talkBtn.textContent = "Start Mic";
+                    talkBtn.classList.remove("bg-red-600", "hover:bg-red-500");
+                    talkBtn.classList.add(
+                        "bg-emerald-600",
+                        "hover:bg-emerald-500",
+                    );
                     return;
                 }
 
                 inputStream = await navigator.mediaDevices.getUserMedia({
                     audio: true,
                 });
-                processorNode = audioContext.createScriptProcessor(4096, 1, 1);
 
+                processorNode = audioContext.createScriptProcessor(4096, 1, 1);
                 const source =
                     audioContext.createMediaStreamSource(inputStream);
                 source.connect(processorNode);
-                processorNode.connect(audioContext.destination); // we won't actually hear it
+                processorNode.connect(audioContext.destination);
 
                 processorNode.onaudioprocess = (e) => {
+                    if (selfMuted) return;
                     const data = e.inputBuffer.getChannelData(0);
-                    // Send Float32 PCM as ArrayBuffer
-                    ws.send(data.buffer);
+                    const int16 = new Int16Array(data.length);
+                    for (let i = 0; i < data.length; i++) {
+                        let s = data[i];
+                        s = Math.max(-1, Math.min(1, s));
+                        int16[i] = s < 0 ? s * 32768 : s * 32767;
+                    }
+                    sendBinaryFrame(0, int16.buffer);
                 };
 
-                isRecording = true;
-                talkBtn.textContent = "Stop Talking";
+                isRecordingAudio = true;
+                talkBtn.textContent = "Stop Mic";
+                talkBtn.classList.remove(
+                    "bg-emerald-600",
+                    "hover:bg-emerald-500",
+                );
+                talkBtn.classList.add("bg-red-600", "hover:bg-red-500");
             };
+
+            // ===== VIDEO SEND HELPERS =====
+            function stopVideoSending() {
+                if (snapshotIntervalId) {
+                    clearInterval(snapshotIntervalId);
+                    snapshotIntervalId = null;
+                }
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach((t) => t.stop());
+                    cameraStream = null;
+                }
+                isSendingVideo = false;
+                currentVideoSource = "none";
+                localVideo.srcObject = null;
+                setLocalPreviewState("off");
+            }
+
+            function setLocalPreviewState(state) {
+                if (state === "on") {
+                    localVideo.classList.remove("fade-hidden");
+                    localVideo.classList.add("fade-visible");
+
+                    // animate off-card out
+                    localOffCard.style.opacity = "0";
+                    localOffCard.classList.remove(
+                        "slide-fade-enter",
+                        "slide-fade-active",
+                        "slide-vertical-enter",
+                        "slide-vertical-active",
+                        "fade-visible",
+                    );
+                } else {
+                    localVideo.classList.remove("fade-visible");
+                    localVideo.classList.add("fade-hidden");
+
+                    localOffCard.style.opacity = "1";
+                    applyLocalOffCardStyle();
+                }
+            }
+
+            // ===== CAMERA TOGGLE =====
+            cameraBtn.onclick = async () => {
+                if (isSendingVideo && currentVideoSource === "camera") {
+                    stopVideoSending();
+                    cameraBtn.textContent = "Camera On";
+                    cameraBtn.classList.remove(
+                        "bg-red-600",
+                        "hover:bg-red-500",
+                    );
+                    cameraBtn.classList.add("bg-sky-600", "hover:bg-sky-500");
+                    return;
+                }
+
+                if (isSendingVideo && currentVideoSource === "screen") {
+                    stopVideoSending();
+                    screenBtn.textContent = "Share Screen";
+                    screenBtn.classList.remove(
+                        "bg-red-600",
+                        "hover:bg-red-500",
+                    );
+                    screenBtn.classList.add(
+                        "bg-indigo-600",
+                        "hover:bg-indigo-500",
+                    );
+                }
+
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: false,
+                });
+                currentVideoSource = "camera";
+                isSendingVideo = true;
+                localVideo.srcObject = cameraStream;
+                setLocalPreviewState("on");
+
+                cameraBtn.textContent = "Camera Off";
+                cameraBtn.classList.remove("bg-sky-600", "hover:bg-sky-500");
+                cameraBtn.classList.add("bg-red-600", "hover:bg-red-500");
+
+                const track = cameraStream.getVideoTracks()[0];
+                const settings = track.getSettings();
+                const width = settings.width || 640;
+                const height = settings.height || 360;
+
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+
+                snapshotIntervalId = setInterval(() => {
+                    if (!cameraStream || !cameraStream.active) return;
+                    ctx.drawImage(localVideo, 0, 0, width, height);
+                    canvas.toBlob(
+                        (blob) => {
+                            if (!blob) return;
+                            blob.arrayBuffer().then((ab) => {
+                                sendBinaryFrame(1, ab);
+                            });
+                        },
+                        "image/jpeg",
+                        0.6,
+                    );
+                }, snapshotIntervalMs);
+            };
+
+            // ===== SCREEN SHARE TOGGLE =====
+            screenBtn.onclick = async () => {
+                if (isSendingVideo && currentVideoSource === "screen") {
+                    stopVideoSending();
+                    screenBtn.textContent = "Share Screen";
+                    screenBtn.classList.remove(
+                        "bg-red-600",
+                        "hover:bg-red-500",
+                    );
+                    screenBtn.classList.add(
+                        "bg-indigo-600",
+                        "hover:bg-indigo-500",
+                    );
+                    return;
+                }
+
+                if (isSendingVideo && currentVideoSource === "camera") {
+                    stopVideoSending();
+                    cameraBtn.textContent = "Camera On";
+                    cameraBtn.classList.remove(
+                        "bg-red-600",
+                        "hover:bg-red-500",
+                    );
+                    cameraBtn.classList.add("bg-sky-600", "hover:bg-sky-500");
+                }
+
+                try {
+                    cameraStream = await navigator.mediaDevices.getDisplayMedia(
+                        {
+                            video: true,
+                        },
+                    );
+                } catch (e) {
+                    console.error("Screen share cancelled", e);
+                    return;
+                }
+
+                currentVideoSource = "screen";
+                isSendingVideo = true;
+                localVideo.srcObject = cameraStream;
+                setLocalPreviewState("on");
+
+                screenBtn.textContent = "Stop Screen";
+                screenBtn.classList.remove(
+                    "bg-indigo-600",
+                    "hover:bg-indigo-500",
+                );
+                screenBtn.classList.add("bg-red-600", "hover:bg-red-500");
+
+                const track = cameraStream.getVideoTracks()[0];
+                const settings = track.getSettings();
+                const width = settings.width || 1024;
+                const height = settings.height || 576;
+
+                const canvas = document.createElement("canvas");
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+
+                snapshotIntervalId = setInterval(() => {
+                    if (!cameraStream || !cameraStream.active) return;
+                    ctx.drawImage(localVideo, 0, 0, width, height);
+                    canvas.toBlob(
+                        (blob) => {
+                            if (!blob) return;
+                            blob.arrayBuffer().then((ab) => {
+                                sendBinaryFrame(1, ab);
+                            });
+                        },
+                        "image/jpeg",
+                        0.6,
+                    );
+                }, snapshotIntervalMs);
+
+                track.addEventListener("ended", () => {
+                    stopVideoSending();
+                    screenBtn.textContent = "Share Screen";
+                    screenBtn.classList.remove(
+                        "bg-red-600",
+                        "hover:bg-red-500",
+                    );
+                    screenBtn.classList.add(
+                        "bg-indigo-600",
+                        "hover:bg-indigo-500",
+                    );
+                });
+            };
+
+            // ===== PACK & SEND =====
+            function sendBinaryFrame(kind, payloadBuffer) {
+                const encoder = new TextEncoder();
+                const nameBytes = encoder.encode(name);
+                const nameLen = nameBytes.length;
+
+                const payload = new Uint8Array(payloadBuffer);
+                const out = new Uint8Array(2 + nameLen + payload.byteLength);
+
+                out[0] = kind;
+                out[1] = nameLen;
+                out.set(nameBytes, 2);
+                out.set(payload, 2 + nameLen);
+
+                ws.send(out.buffer);
+            }
+
+            // ===== HANDLE INCOMING SNAPSHOTS =====
+            function handleIncomingSnapshot(senderName, bytes) {
+                let peer = videoPeers.get(senderName);
+                if (!peer) {
+                    const img = document.createElement("img");
+                    img.className =
+                        "w-full h-full object-cover rounded-lg bg-black fade fade-visible";
+
+                    const offCard = document.createElement("div");
+                    offCard.className =
+                        "absolute inset-0 flex flex-col items-center justify-center text-xs sm:text-sm user-off-card user-off-style1 slide-fade-active rounded-lg";
+                    offCard.innerHTML = `
+            <div class="text-base sm:text-lg font-semibold mb-1">@${senderName} camera off</div>
+            <div class="text-[11px] text-slate-300">Waiting for video...</div>
+          `;
+
+                    const container = document.createElement("div");
+                    container.className =
+                        "aspect-video w-full bg-black/60 rounded-lg overflow-hidden relative";
+                    container.appendChild(img);
+                    container.appendChild(offCard);
+
+                    const label = document.createElement("div");
+                    label.textContent = senderName;
+                    label.className =
+                        "absolute bottom-1 left-1 px-2 py-0.5 text-xs bg-black/60 rounded";
+                    container.appendChild(label);
+
+                    remoteVideosEl.appendChild(container);
+
+                    peer = {
+                        imgEl: img,
+                        lastUrl: null,
+                        offCard,
+                        lastSeen: Date.now(),
+                        history: [],
+                    };
+                    videoPeers.set(senderName, peer);
+                }
+
+                peer.lastSeen = Date.now();
+
+                // hide off-card with animation when video turns on
+                peer.offCard.classList.remove(
+                    "slide-fade-enter",
+                    "slide-fade-active",
+                    "slide-vertical-enter",
+                    "slide-vertical-active",
+                    "fade-visible",
+                );
+                peer.offCard.style.opacity = "0";
+
+                // 10s buffer (~30 frames)
+                peer.history.push(bytes);
+                if (peer.history.length > 30) peer.history.shift();
+
+                const blob = new Blob([bytes], { type: "image/jpeg" });
+                const url = URL.createObjectURL(blob);
+
+                if (peer.lastUrl) {
+                    URL.revokeObjectURL(peer.lastUrl);
+                }
+
+                peer.lastUrl = url;
+                peer.imgEl.src = url;
+            }
+
+            // Periodically detect "camera off" when no snapshots and animate ON
+            setInterval(() => {
+                const now = Date.now();
+                videoPeers.forEach((peer) => {
+                    if (!peer.lastSeen) return;
+                    if (now - peer.lastSeen > 2500) {
+                        peer.offCard.style.opacity = "1";
+                        peer.offCard.classList.remove(
+                            "slide-fade-enter",
+                            "slide-fade-active",
+                            "slide-vertical-enter",
+                            "slide-vertical-active",
+                            "fade-visible",
+                        );
+
+                        if (offCardStyle === "style2") {
+                            peer.offCard.classList.add(
+                                "user-off-style2",
+                                "slide-vertical-active",
+                            );
+                        } else if (offCardStyle === "style3") {
+                            peer.offCard.classList.add(
+                                "user-off-style3",
+                                "fade-visible",
+                            );
+                        } else {
+                            peer.offCard.classList.add(
+                                "user-off-style1",
+                                "slide-fade-active",
+                            );
+                        }
+                    }
+                });
+            }, 1000);
         </script>
     </body>
 </html>
